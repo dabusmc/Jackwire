@@ -1,0 +1,61 @@
+# Build directories
+build/
+cmake-build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# Generated build files
+Makefile
+*.make
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+
+# Debug / profiling output
+*.pdb
+*.ilk
+*.dSYM/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln
+
+# Visual Studio / MSBuild
+.vs/
+x64/
+x86/
+Debug/
+Release/
+
+# CMake presets user-specific files
+CMakeUserPresets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
