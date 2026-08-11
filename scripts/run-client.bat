@@ -2,6 +2,6 @@
 
 cd ../build
 
-.\jackwire.exe
+.\jackwire.exe client 23430
 
 pause
