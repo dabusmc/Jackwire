@@ -48,7 +48,18 @@ uint8_t deckDrawNext(Deck* deck)
         {
             card_is_valid = 1;
         }
+
+        for(int i = 0; i < deck->drawn_card_count; i++)
+        {
+            if(deck->drawn_cards[i] == drawn)
+            {
+                card_is_valid = 0;
+                continue;
+            }
+        }
     }
+
+    deck->drawn_cards[deck->drawn_card_count] = drawn;
     return drawn;
 }
 

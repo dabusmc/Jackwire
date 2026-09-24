@@ -14,9 +14,9 @@
 int _messageHeaderSerialize(MessageHeader* header, void* buffer)
 {
     uint32_t type = littleToBigEndian(header->type);
-    uint32_t length = littleToBigEndian(header->length);
-
     COPY_TO_OFFSET(buffer, 0, type);
+
+    uint32_t length = littleToBigEndian(header->length);
     COPY_TO_OFFSET(buffer, sizeof(type), length);
 
     return sizeof(type) + sizeof(length);
@@ -33,11 +33,13 @@ int _testMessageSerialize(TestMessage* message, void* buffer)
 
 int _gameStartMessageSerialize(GameStartMessage* message, void* buffer)
 {
-    uint32_t temp = littleToBigEndian(message->temp);
+    uint8_t first_card = message->first_card;
+    COPY_TO_OFFSET(buffer, 0, first_card);
 
-    COPY_TO_OFFSET(buffer, 0, temp);
+    uint8_t second_card = message->second_card;
+    COPY_TO_OFFSET(buffer, sizeof(first_card), second_card);
 
-    return sizeof(temp);
+    return sizeof(first_card) + sizeof(second_card);
 }
 
 // Deserialization
@@ -65,11 +67,15 @@ int _testMessageDeserialize(void* buffer, TestMessage* message)
 
 int _gameStartMessageDeserialize(void* buffer, GameStartMessage* message)
 {
-    uint32_t temp;
-    COPY_FROM_OFFSET(temp, buffer, 0);
-    message->temp = bigToLittleEndian(temp);
+    uint8_t first_card;
+    COPY_FROM_OFFSET(first_card, buffer, 0);
+    message->first_card = first_card;
 
-    return sizeof(temp);
+    uint8_t second_card;
+    COPY_FROM_OFFSET(second_card, buffer, sizeof(first_card));
+    message->second_card = second_card;
+
+    return sizeof(first_card) + sizeof(second_card);
 }
 
 // Life Cycle
@@ -108,12 +114,13 @@ void testMessageCreate(Message* msg, int value)
     msg->payload = test;
 }
 
-void gameStartMessageCreate(Message* msg, int temp)
+void gameStartMessageCreate(Message* msg, uint8_t first_card, uint8_t second_card)
 {
     msg->header.type = MESSAGE_S2C_GAME_START;
 
     GameStartMessage* game_start = (GameStartMessage*)malloc(sizeof(GameStartMessage));
-    game_start->temp = temp;
+    game_start->first_card = first_card;
+    game_start->second_card = second_card;    
 
     msg->payload = game_start;
 }

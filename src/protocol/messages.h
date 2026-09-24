@@ -40,7 +40,8 @@ typedef struct TestMessage TestMessage;
 
 struct GameStartMessage
 {
-    uint32_t temp;
+    uint8_t first_card;
+    uint8_t second_card;
 };
 typedef struct GameStartMessage GameStartMessage;
 
@@ -62,7 +63,7 @@ void requestCardsMessageCreate(Message* msg);
 
 // Data Messages
 void testMessageCreate(Message* msg, int value);
-void gameStartMessageCreate(Message* msg, int temp);
+void gameStartMessageCreate(Message* msg, uint8_t first_card, uint8_t second_card);
 
 // Sending
 SocketError messageSend(Socket* socket, Message* msg);

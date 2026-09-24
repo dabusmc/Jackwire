@@ -127,22 +127,10 @@ int serverMain(int argc, char** argv)
         return -1;
     }
 
-    for(int i = 0; i < 10; i++)
-    {
-        uint8_t drawn = deckDrawNext(deck);
-
-        printf("Drew: %s of %s (", cardGetValueName(drawn), cardGetSuitName(drawn));
-        for (int i = 7; i >= 0; i--)
-        {
-            printf("%d ", (drawn >> i) & 1);
-        }
-        printf(")\n");
-    }
-
     Message game_start_message;
     for(int i = 0; i < max_players; i++)
     {
-        gameStartMessageCreate(&game_start_message, i);
+        gameStartMessageCreate(&game_start_message, deckDrawNext(deck), deckDrawNext(deck));
         SocketError error = messageSend(clients[i], &game_start_message);        
         if (error != SOCKET_OK)
         {
@@ -183,7 +171,7 @@ int serverMain(int argc, char** argv)
                         continue;
                     }
 
-                    printf("Error!\n");
+                    printf("Error: %i\n", error);
                     messageDestroy(&msg);
                     socketDestroy(server);
                     return -1;

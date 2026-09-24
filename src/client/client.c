@@ -3,6 +3,8 @@
 #include "network/socket.h"
 #include "protocol/messages.h"
 
+#include "game/deck.h"
+
 #include <SDL3/SDL.h>
 
 #include <stdio.h>
@@ -91,8 +93,11 @@ int clientMain(int argc, char** argv)
                 switch(msg.header.type)
                 {
                 case MESSAGE_S2C_GAME_START:
+                    GameStartMessage* game_start = (GameStartMessage*)msg.payload;
+                    printf("Starting with %s of %s and %s of %s\n",
+                        cardGetValueName(game_start->first_card), cardGetSuitName(game_start->first_card),
+                        cardGetValueName(game_start->second_card), cardGetSuitName(game_start->second_card));
                     game_started = 1;
-                    printf("Game Start!\n");
                     break;
                 default:
                     printf("Unimplemented Message: %i\n", msg.header.type);
@@ -125,6 +130,9 @@ int clientMain(int argc, char** argv)
 
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    sendDisconnectMessage(client);
+
     socketDestroy(client);
     return 0;
 }
