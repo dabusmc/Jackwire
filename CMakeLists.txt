@@ -6,13 +6,11 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(FetchContent)
-
 FetchContent_Declare(
     SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG release-3.2.0
 )
-
 FetchContent_MakeAvailable(SDL3)
 
 set(SOURCE "src/main.c"
@@ -30,3 +28,9 @@ if(WIN32)
 elseif(UNIX)
     target_sources(jackwire PRIVATE src/network/socket_linux.c)
 endif()
+
+add_custom_command(TARGET jackwire POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:SDL3::SDL3>
+        $<TARGET_FILE_DIR:jackwire>
+)
