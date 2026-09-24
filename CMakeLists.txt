@@ -6,7 +6,9 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(SOURCE "src/main.c"
-    "src/protocol/messages.c")
+    "src/protocol/messages.c"
+    "src/server/server.c"
+    "src/client/client.c")
 
 add_executable(jackwire ${SOURCE})
 target_include_directories("jackwire" PUBLIC "src")
