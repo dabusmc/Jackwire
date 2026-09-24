@@ -7,48 +7,39 @@
 
 #define MAX_PLAYERS 1
 
-int serverMain(int argc, char** argv)
+SocketError _initServer(Socket** server, char* port)
 {
-    if(argc <= 2)
-    {
-        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
-        return -1;
-    }
-
-    char* port = argv[2];
-
-    Socket* server;
-
-    SocketError error = socketCreate(&server);
+    SocketError error = socketCreate(server);
     if(error != SOCKET_OK)
     {
-        printf("Socket creation failed!\n");
-        return -1;
+        return error;
     }
 
-    error = socketBind(server, port);
+    error = socketBind(*server, port);
     if(error != SOCKET_OK)
     {
-        printf("Socket binding failed!\n");
-        socketDestroy(server);
-        return -1;
+        socketDestroy(*server);
+        return error;
     }
 
     printf("Socket bound to port %s.\n", port);
 
-    error = socketListen(server);
+    error = socketListen(*server);
     if(error != SOCKET_OK)
     {
-        printf("Socket listening failed!\n");
-        socketDestroy(server);
-        return -1;
+        socketDestroy(*server);
+        return error;
     }
 
+    return SOCKET_OK;
+}
+
+SocketError _waitForClients(Socket* server, Socket** clients, int* client_count)
+{
     printf("Listening for connections...\n");
 
-    Socket* clients[MAX_PLAYERS] = { NULL };
-    int client_count = 0;
-    while(client_count < MAX_PLAYERS)
+    int connected_client_count = 0;
+    while(connected_client_count < MAX_PLAYERS)
     {
         Socket* client;
 
@@ -65,13 +56,15 @@ int serverMain(int argc, char** argv)
                     testMessageCreate(&msg, 42);
                     printf("Value Sent: %i\n", ((TestMessage*)msg.payload)->value);
                     
-                    error = messageSend(client, &msg);
+                    SocketError error = messageSend(client, &msg);
                     if (error != SOCKET_OK)
                     {
-                        printf("Failed to send message.\n");
+                        return error;
                     }
+                    
+                    messageDestroy(&msg);
 
-                    client_count += 1;
+                    connected_client_count += 1;
                     
                     break;
                 }
@@ -79,7 +72,33 @@ int serverMain(int argc, char** argv)
         }
     }
 
+    *client_count = connected_client_count;
     printf("All clients connected.\n");
+
+    return SOCKET_OK;
+}
+
+int serverMain(int argc, char** argv)
+{
+    if(argc <= 2)
+    {
+        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
+        return -1;
+    }
+
+    char* port = argv[2];
+
+    Socket* server;
+    SocketError error = _initServer(&server, port);
+    if(error != SOCKET_OK)
+    {
+        printf("Initializing Network Failed!\n");
+        return -1;
+    }
+
+    Socket* clients[MAX_PLAYERS] = { NULL };
+    int client_count = 0;
+    _waitForClients(server, clients, &client_count);
 
     int running = 1;
     int ready[MAX_PLAYERS] = { 0 };

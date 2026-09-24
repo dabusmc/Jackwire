@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-SocketError _initNetwork(Socket** client, char* ip, char* port)
+SocketError _initClient(Socket** client, char* ip, char* port)
 {
     SocketError error = socketCreate(client);
     if(error != SOCKET_OK)
@@ -38,7 +38,7 @@ int clientMain(int argc, char** argv)
     printf("Client attempting connection on port %s...\n", port);
 
     Socket* client;
-    SocketError error = _initNetwork(&client, "127.0.0.1", port);
+    SocketError error = _initClient(&client, "127.0.0.1", port);
     if(error != SOCKET_OK)
     {
         printf("Initializing Network Failed!\n");
