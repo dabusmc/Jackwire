@@ -7,8 +7,13 @@
 
 typedef enum
 {
+    // Two-Way Messages
     MESSAGE_TEST = 0,
-    MESSAGE_DISCONNECT
+
+    // C2S Messages
+    MESSAGE_C2S_DISCONNECT
+
+    // S2C Messages
 } MessageType;
 
 struct MessageHeader

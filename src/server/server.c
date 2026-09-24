@@ -3,9 +3,8 @@
 #include "network/socket.h"
 #include "protocol/messages.h"
 
+#include <stdlib.h>
 #include <stdio.h>
-
-#define MAX_PLAYERS 1
 
 SocketError _initServer(Socket** server, char* port)
 {
@@ -34,18 +33,18 @@ SocketError _initServer(Socket** server, char* port)
     return SOCKET_OK;
 }
 
-SocketError _waitForClients(Socket* server, Socket** clients, int* client_count)
+SocketError _waitForClients(Socket* server, int max_players, Socket** clients, int* client_count)
 {
     printf("Listening for connections...\n");
 
     int connected_client_count = 0;
-    while(connected_client_count < MAX_PLAYERS)
+    while(connected_client_count < max_players)
     {
         Socket* client;
 
         if(socketAccept(server, &client) == SOCKET_OK)
         {
-            for (int i = 0; i < MAX_PLAYERS; i++)
+            for (int i = 0; i < max_players; i++)
             {
                 if (clients[i] == NULL)
                 {
@@ -61,7 +60,7 @@ SocketError _waitForClients(Socket* server, Socket** clients, int* client_count)
                     {
                         return error;
                     }
-                    
+
                     messageDestroy(&msg);
 
                     connected_client_count += 1;
@@ -80,13 +79,14 @@ SocketError _waitForClients(Socket* server, Socket** clients, int* client_count)
 
 int serverMain(int argc, char** argv)
 {
-    if(argc <= 2)
+    if(argc <= 3)
     {
-        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
+        printf("Usage:\n\tjackwire server <port> <max_players>\n\tjackwire client <port>");
         return -1;
     }
 
     char* port = argv[2];
+    int max_players = atoi(argv[3]);
 
     Socket* server;
     SocketError error = _initServer(&server, port);
@@ -96,36 +96,83 @@ int serverMain(int argc, char** argv)
         return -1;
     }
 
-    Socket* clients[MAX_PLAYERS] = { NULL };
+    printf("Max Players: %i\n", max_players);
+    
     int client_count = 0;
-    _waitForClients(server, clients, &client_count);
+    Socket** clients = malloc(sizeof(Socket*) * max_players);
+    for (int i = 0; i < max_players; i++)
+    {
+        clients[i] = NULL;
+    }
+    _waitForClients(server, max_players, clients, &client_count);
+
+    int* ready = malloc(sizeof(int) * max_players);
+    for (int i = 0; i < max_players; i++)
+    {
+        ready[i] = 0;
+    }
 
     int running = 1;
-    int ready[MAX_PLAYERS] = { 0 };
     while(running)
     {
-        SocketError error = socketSelect(clients, client_count, ready);
+        SocketError error = socketSelect(clients, max_players, ready);
         if(error != SOCKET_OK)
         {
             printf("Socket select failed!\n");
             break;
         }
 
-        for(int i = 0; i < client_count; i++)
+        for(int i = 0; i < max_players; i++)
         {
             if(ready[i] == 1)
             {
                 Message msg;
-                messageReceive(clients[i], &msg);
+                SocketError error = messageReceive(clients[i], &msg);
 
-                if(msg.header.type == MESSAGE_DISCONNECT)
+                if(error != SOCKET_OK)
                 {
-                    running = 0;
+                    if(error == SOCKET_CONNECTION_CLOSED)
+                    {
+                        messageDestroy(&msg);
+                        socketDestroy(clients[i]);
+                        clients[i] = NULL;
+                        client_count--;
+
+                        printf("Client %i disconnected!\n", i);
+
+                        continue;
+                    }
+
+                    printf("Error!\n");
+                    messageDestroy(&msg);
+                    socketDestroy(server);
+                    return -1;
                 }
+
+                if(msg.header.type == MESSAGE_C2S_DISCONNECT)
+                {
+                    messageDestroy(&msg);
+                    socketDestroy(clients[i]);
+                    clients[i] = NULL;
+                    client_count--;
+
+                    printf("Client %i disconnected!\n", i);
+
+                    continue;
+                }
+
+                messageDestroy(&msg);
             }
+        }
+
+        if(client_count == 0)
+        {
+            running = 0;
         }
     }
 
+    free(clients);
+    free(ready);
     socketDestroy(server);
 
     return 0;

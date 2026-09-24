@@ -209,8 +209,14 @@ SocketError socketSelect(Socket** sockets, int socket_count, int* ready)
 
     for (int i = 0; i < socket_count; i++)
     {
-        FD_SET(sockets[i]->impl, &read_set);
         ready[i] = 0;
+
+        if (sockets[i] == NULL)
+        {
+            continue;
+        }
+
+        FD_SET(sockets[i]->impl, &read_set);
     }
 
     int result = select(0, &read_set, NULL, NULL, NULL);
@@ -221,7 +227,7 @@ SocketError socketSelect(Socket** sockets, int socket_count, int* ready)
 
     for (int i = 0; i < socket_count; i++)
     {
-        if (FD_ISSET(sockets[i]->impl, &read_set))
+        if (sockets[i] != NULL && FD_ISSET(sockets[i]->impl, &read_set))
         {
             ready[i] = 1;
         }

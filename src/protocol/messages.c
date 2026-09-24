@@ -65,7 +65,7 @@ void testMessageCreate(Message* msg, int value)
 
 void disconnectMessageCreate(Message* msg)
 {
-    msg->header.type = MESSAGE_DISCONNECT;
+    msg->header.type = MESSAGE_C2S_DISCONNECT;
     msg->header.length = 0;
     msg->payload = NULL;
 }
@@ -95,7 +95,7 @@ SocketError messageSend(Socket* socket, Message* msg)
         }
         msg->header.length = payload_size;
         break;
-    case MESSAGE_DISCONNECT:
+    case MESSAGE_C2S_DISCONNECT:
         payload_size = 0;
         break;
     default:
@@ -142,7 +142,7 @@ SocketError messageReceive(Socket* socket, Message* msg)
         msg->payload = malloc(sizeof(TestMessage));
         _testMessageDeserialize(payload_buffer, msg->payload);
         break;
-    case MESSAGE_DISCONNECT:
+    case MESSAGE_C2S_DISCONNECT:
         msg->payload = NULL;
         break;
     default:

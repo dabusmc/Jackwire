@@ -30,7 +30,7 @@ int clientMain(int argc, char** argv)
 {
     if(argc <= 2)
     {
-        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
+        printf("Usage:\n\tjackwire server <port> <max_players>\n\tjackwire client <port>");
         return -1;
     }
 
