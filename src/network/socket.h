@@ -1,9 +1,6 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-#include <stdint.h>
-#include <stddef.h>
-
 typedef enum
 {
     SOCKET_OK = 0,
@@ -13,11 +10,15 @@ typedef enum
     SOCKET_BIND_FAILED,
     SOCKET_LISTEN_FAILED,
     SOCKET_ACCEPT_FAILED,
-    SOCKET_CONNECT_FAILED
+    SOCKET_CONNECT_FAILED,
+
+    SOCKET_SEND_FAILED,
+    SOCKET_RECV_FAILED
 } SocketError;
 
 typedef struct Socket Socket;
 
+// Life Cycle
 SocketError socketInit();
 void socketCleanup();
 
@@ -27,5 +28,9 @@ SocketError socketListen(Socket* sock);
 SocketError socketAccept(Socket* server, Socket** out_client);
 SocketError socketConnect(Socket* sock, const char* address, const char* port);
 void socketDestroy(Socket* sock);
+
+// Send/Receive
+SocketError socketSend(Socket *sock, const void *data, int length);
+SocketError socketReceive(Socket *sock, void *buffer, int length);
 
 #endif

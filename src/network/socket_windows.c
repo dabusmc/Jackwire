@@ -3,6 +3,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+#include <stdlib.h>
+
 struct Socket
 {
     SOCKET impl;
@@ -143,4 +145,28 @@ void socketDestroy(Socket* sock)
 
     closesocket(sock->impl);
     free(sock);
+}
+
+SocketError socketSend(Socket *sock, const void *data, int length)
+{
+    int result = send(sock->impl, data, length, 0);
+    
+    if (result == SOCKET_ERROR)
+    {
+        return SOCKET_SEND_FAILED;
+    }
+
+    return SOCKET_OK;
+}
+
+SocketError socketReceive(Socket *sock, void *buffer, int length)
+{
+    int result = recv(sock->impl, buffer, length, 0);
+
+    if(result == SOCKET_ERROR)
+    {
+        return SOCKET_RECV_FAILED;
+    }
+
+    return SOCKET_OK;
 }

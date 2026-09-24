@@ -3,6 +3,8 @@
 
 #include "network/socket.h"
 
+#define MAX_PLAYERS 1
+
 int serverMain(int argc, char** argv)
 {
     if(argc <= 2)
@@ -14,7 +16,6 @@ int serverMain(int argc, char** argv)
     char* port = argv[2];
 
     Socket* server;
-    Socket* client;
 
     SocketError error = socketCreate(&server);
     if(error != SOCKET_OK)
@@ -43,17 +44,35 @@ int serverMain(int argc, char** argv)
 
     printf("Listening for connections...\n");
 
-    error = socketAccept(server, &client);
-    if(error != SOCKET_OK)
+    Socket* clients[MAX_PLAYERS] = { NULL };
+    int client_count = 0;
+    while(client_count < MAX_PLAYERS)
     {
-        printf("Socket accepting failed!\n");
-        socketDestroy(server);
-        return -1;
+        Socket* client;
+
+        if(socketAccept(server, &client) == SOCKET_OK)
+        {
+            for (int i = 0; i < MAX_PLAYERS; i++)
+            {
+                if (clients[i] == NULL)
+                {
+                    clients[i] = client;
+                    printf("Client %d connected.\n", i + 1);
+                    
+                    char msg_buffer[7];
+                    socketReceive(client, msg_buffer, 7);
+                    printf("Received: %s\n", msg_buffer);
+                    socketSend(client, "World", 6);
+
+                    client_count += 1;
+                    
+                    break;
+                }
+            }
+        }
     }
 
-    printf("Client connected successfully\n");
-
-    socketDestroy(client);
+    printf("All clients connected.\n");
     socketDestroy(server);
 
     return 0;
@@ -88,6 +107,12 @@ int clientMain(int argc, char** argv)
     }
 
     printf("Connected to server!\n");
+    socketSend(client, "Hello!", 7);
+
+    char msg_buffer[7];
+    socketReceive(client, msg_buffer, 7);
+    printf("Received: %s\n", msg_buffer);
+
     socketDestroy(client);
 
     return 0;
