@@ -67,6 +67,7 @@ int clientMain(int argc, char** argv)
     }
 
     int running = 1;
+    int game_started = 0;
     while (running)
     {
         SDL_Event event;
@@ -80,15 +81,46 @@ int clientMain(int argc, char** argv)
             }
         }
 
-        const double now = ((double)SDL_GetTicks()) / 1000.0;
+        if(socketHasData(client))
+        {
+            Message msg;
+            SocketError error = messageReceive(client, &msg);
 
-        const float red = (float) (0.5 + 0.5 * SDL_sin(now));
-        const float green = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-        const float blue = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
+            if (error == SOCKET_OK)
+            {
+                switch(msg.header.type)
+                {
+                case MESSAGE_S2C_GAME_START:
+                    game_started = 1;
+                    printf("Game Start!\n");
+                    break;
+                default:
+                    printf("Unimplemented Message: %i\n", msg.header.type);
+                    break;
+                }
+            }
 
-        SDL_SetRenderDrawColorFloat(renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);
-        SDL_RenderClear(renderer);
-        SDL_RenderPresent(renderer);
+            messageDestroy(&msg);
+        }
+
+        if(game_started)
+        {
+            SDL_SetRenderDrawColorFloat(renderer, 0.14f, 0.14f, 0.14f, SDL_ALPHA_OPAQUE_FLOAT);
+            SDL_RenderClear(renderer);
+            SDL_RenderPresent(renderer);
+        }
+        else
+        {
+            const double now = ((double)SDL_GetTicks()) / 1000.0;
+
+            const float red = (float) (0.5 + 0.5 * SDL_sin(now));
+            const float green = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
+            const float blue = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
+
+            SDL_SetRenderDrawColorFloat(renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);
+            SDL_RenderClear(renderer);
+            SDL_RenderPresent(renderer);
+        }
     }
 
     SDL_DestroyWindow(window);

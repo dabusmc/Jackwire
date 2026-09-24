@@ -1,0 +1,29 @@
+4 Suits (Clubs, Hearts, Diamonds, Spades)
+14 Types (1-10, Jacks, Queens, Kings, Ace)
+
+Suit -> 2 bits
+Type -> 4 bits
+
+Suit     Type
+ 0 0  0 0 0 0
+
+Types
+1-10 -> 1-10
+Jacks -> 11
+Queens -> 12
+Kings -> 13
+Ace -> 14
+
+Suits
+Clubs -> 00 (0)
+Hearts -> 01 (1)
+Diamonds -> 10 (2)
+Spades -> 11 (3)
+
+e.g.
+
+10 of Clubs -> 0 0 0 1 1 0
+Ace of Diamonds -> 1 0 1 1 1 0
+3 of Hearts -> 0 1 0 0 1 1
+
+Closest representation to this is an uint8_t, with the starting 2 bits as 0 0

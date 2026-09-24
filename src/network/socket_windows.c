@@ -236,6 +236,26 @@ SocketError socketSelect(Socket** sockets, int socket_count, int* ready)
     return SOCKET_OK;
 }
 
+int socketHasData(Socket* socket)
+{
+    fd_set read_set;
+    FD_ZERO(&read_set);
+    FD_SET(socket->impl, &read_set);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+    int result = select(0, &read_set, NULL, NULL, &timeout);
+
+    if (result == SOCKET_ERROR)
+    {
+        return -1;
+    }
+
+    return FD_ISSET(socket->impl, &read_set);
+}
+
 uint32_t littleToBigEndian(uint32_t value)
 {
     return htonl(value);

@@ -40,6 +40,7 @@ SocketError socketReceiveAll(Socket* sock, void* buffer, int target_length);
 
 // Control
 SocketError socketSelect(Socket** sockets, int socket_count, int* ready);
+int socketHasData(Socket *socket);
 
 // Utility
 uint32_t littleToBigEndian(uint32_t value);

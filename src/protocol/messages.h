@@ -11,9 +11,11 @@ typedef enum
     MESSAGE_TEST = 0,
 
     // C2S Messages
-    MESSAGE_C2S_DISCONNECT
+    MESSAGE_C2S_DISCONNECT,
+    MESSAGE_C2S_REQUEST_CARDS,
 
     // S2C Messages
+    MESSAGE_S2C_GAME_START,
 } MessageType;
 
 struct MessageHeader
@@ -21,34 +23,46 @@ struct MessageHeader
     MessageType type;
     uint32_t length;
 };
-
 typedef struct MessageHeader MessageHeader;
-
-struct TestMessage
-{
-    uint32_t value;
-};
-
-typedef struct TestMessage TestMessage;
 
 struct Message
 {
     MessageHeader header;
     void* payload;
 };
-
 typedef struct Message Message;
 
-#define sendDisconnectMessage(socket) \
+struct TestMessage
+{
+    uint32_t value;
+};
+typedef struct TestMessage TestMessage;
+
+struct GameStartMessage
+{
+    uint32_t temp;
+};
+typedef struct GameStartMessage GameStartMessage;
+
+#define sendDatalessMessage(socket, func) \
     Message msg; \
-    disconnectMessageCreate(&msg); \
+    func(&msg); \
     messageSend(socket, &msg); \
     messageDestroy(&msg)
 
 // Life Cycle
-void testMessageCreate(Message* msg, int value);
-void disconnectMessageCreate(Message* msg);
 void messageDestroy(Message* msg);
+
+// No-Data Messages
+void disconnectMessageCreate(Message* msg);
+#define sendDisconnectMessage(socket) sendDatalessMessage(socket, disconnectMessageCreate)
+
+void requestCardsMessageCreate(Message* msg);
+#define sendRequestCardsMessage(socket) sendDatalessMessage(socket, requestCardsMessageCreate)
+
+// Data Messages
+void testMessageCreate(Message* msg, int value);
+void gameStartMessageCreate(Message* msg, int temp);
 
 // Sending
 SocketError messageSend(Socket* socket, Message* msg);
