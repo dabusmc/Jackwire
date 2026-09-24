@@ -38,6 +38,9 @@ SocketError socketSend(Socket* sock, const void* data, int target_length, int* b
 SocketError socketReceive(Socket* sock, void* buffer, int target_length, int* bytes_received);
 SocketError socketReceiveAll(Socket* sock, void* buffer, int target_length);
 
+// Control
+SocketError socketSelect(Socket** sockets, int socket_count, int* ready);
+
 // Utility
 uint32_t littleToBigEndian(uint32_t value);
 uint32_t bigToLittleEndian(uint32_t value);

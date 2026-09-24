@@ -59,6 +59,11 @@ void testMessageCreate(TestMessage* message, MessageHeader* header, int value)
     message->value = value;
 }
 
+void disconnectMessageCreate(MessageHeader* header)
+{
+    header->type = MESSAGE_DISCONNECT;
+}
+
 #define ERROR_CHECK() if(error != SOCKET_OK) return error
 
 SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
@@ -71,6 +76,9 @@ SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
         payload_size = _testMessageSerialize((TestMessage*)payload, payload_buffer);
         header->length = payload_size;
         break;
+    case MESSAGE_DISCONNECT:
+        payload_size = 0;
+        break;
     default:
         return SOCKET_SEND_FAILED;
     }
@@ -82,8 +90,11 @@ SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
     SocketError error = socketSend(socket, header_buffer, header_size, &bytes_sent);
     ERROR_CHECK();
 
-    error = socketSend(socket, payload_buffer, payload_size, &bytes_sent);
-    ERROR_CHECK();
+    if(payload_size > 0)
+    {
+        error = socketSend(socket, payload_buffer, payload_size, &bytes_sent);
+        ERROR_CHECK();
+    }
 
     return SOCKET_OK;
 }
@@ -103,6 +114,8 @@ SocketError messageReceive(Socket* socket, MessageHeader* header, void* payload)
     {
     case MESSAGE_TEST:
         _testMessageDeserialize(payload_buffer, (TestMessage*)payload);
+        break;
+    case MESSAGE_DISCONNECT:
         break;
     default:
         return SOCKET_RECV_FAILED;

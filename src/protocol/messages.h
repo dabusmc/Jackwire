@@ -7,7 +7,8 @@
 
 typedef enum
 {
-    MESSAGE_TEST = 0
+    MESSAGE_TEST = 0,
+    MESSAGE_DISCONNECT
 } MessageType;
 
 struct MessageHeader
@@ -27,6 +28,7 @@ typedef struct TestMessage TestMessage;
 
 // Creation
 void testMessageCreate(TestMessage* message, MessageHeader* header, int value);
+void disconnectMessageCreate(MessageHeader* header);
 
 // Sending
 SocketError messageSend(Socket* socket, MessageHeader* header, void* payload);

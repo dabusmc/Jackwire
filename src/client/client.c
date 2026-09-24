@@ -75,6 +75,12 @@ int clientMain(int argc, char** argv)
         {
             if (event.type == SDL_EVENT_QUIT)
             {
+                MessageHeader header;
+                disconnectMessageCreate(&header);
+                messageSend(client, &header, NULL);
+                
+                printf("Disconnected from server!\n");
+
                 running = 0;
             }
         }

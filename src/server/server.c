@@ -81,6 +81,34 @@ int serverMain(int argc, char** argv)
     }
 
     printf("All clients connected.\n");
+
+    int running = 1;
+    int ready[MAX_PLAYERS] = { 0 };
+    while(running)
+    {
+        SocketError error = socketSelect(clients, client_count, ready);
+        if(error != SOCKET_OK)
+        {
+            printf("Socket select failed!\n");
+            break;
+        }
+
+        for(int i = 0; i < client_count; i++)
+        {
+            if(ready[i] == 1)
+            {
+                MessageHeader header;
+                messageReceive(clients[i], &header, NULL);
+
+                if(header.type == MESSAGE_DISCONNECT)
+                {
+                    printf("Client %i disconnected\n", i);
+                    running = 0;
+                }
+            }
+        }
+    }
+
     socketDestroy(server);
 
     return 0;

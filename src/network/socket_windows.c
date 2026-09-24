@@ -202,6 +202,34 @@ SocketError socketReceiveAll(Socket* sock, void* buffer, int target_length)
     return SOCKET_OK;
 }
 
+SocketError socketSelect(Socket** sockets, int socket_count, int* ready)
+{
+    fd_set read_set;
+    FD_ZERO(&read_set);
+
+    for (int i = 0; i < socket_count; i++)
+    {
+        FD_SET(sockets[i]->impl, &read_set);
+        ready[i] = 0;
+    }
+
+    int result = select(0, &read_set, NULL, NULL, NULL);
+    if (result == SOCKET_ERROR)
+    {
+        return SOCKET_RECV_FAILED;
+    }
+
+    for (int i = 0; i < socket_count; i++)
+    {
+        if (FD_ISSET(sockets[i]->impl, &read_set))
+        {
+            ready[i] = 1;
+        }
+    }
+
+    return SOCKET_OK;
+}
+
 uint32_t littleToBigEndian(uint32_t value)
 {
     return htonl(value);
