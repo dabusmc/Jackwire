@@ -61,12 +61,11 @@ int serverMain(int argc, char** argv)
                     clients[i] = client;
                     printf("Client %d connected.\n", i + 1);
 
-                    MessageHeader header;
-                    TestMessage msg;
-                    testMessageCreate(&msg, &header, 42);
-                    printf("Value Sent: %i\n", msg.value);
+                    Message msg;
+                    testMessageCreate(&msg, 42);
+                    printf("Value Sent: %i\n", ((TestMessage*)msg.payload)->value);
                     
-                    error = messageSend(client, &header, &msg);
+                    error = messageSend(client, &msg);
                     if (error != SOCKET_OK)
                     {
                         printf("Failed to send message.\n");
@@ -97,12 +96,11 @@ int serverMain(int argc, char** argv)
         {
             if(ready[i] == 1)
             {
-                MessageHeader header;
-                messageReceive(clients[i], &header, NULL);
+                Message msg;
+                messageReceive(clients[i], &msg);
 
-                if(header.type == MESSAGE_DISCONNECT)
+                if(msg.header.type == MESSAGE_DISCONNECT)
                 {
-                    printf("Client %i disconnected\n", i);
                     running = 0;
                 }
             }

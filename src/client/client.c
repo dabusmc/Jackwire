@@ -45,10 +45,9 @@ int clientMain(int argc, char** argv)
         return -1;
     }
 
-    MessageHeader header;
-    TestMessage msg;
-    messageReceive(client, &header, &msg);
-    printf("Value Received: %i\n", msg.value);
+    Message msg;
+    messageReceive(client, &msg);
+    printf("Value Received: %i\n", ((TestMessage*)msg.payload)->value);
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -75,12 +74,8 @@ int clientMain(int argc, char** argv)
         {
             if (event.type == SDL_EVENT_QUIT)
             {
-                MessageHeader header;
-                disconnectMessageCreate(&header);
-                messageSend(client, &header, NULL);
-                
+                sendDisconnectMessage(client);
                 printf("Disconnected from server!\n");
-
                 running = 0;
             }
         }

@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define HEADER_SIZE 8
 #define MAX_PAYLOAD_SIZE 1024
@@ -52,29 +53,47 @@ int _testMessageDeserialize(void* buffer, TestMessage* message)
     return sizeof(value);
 }
 
-void testMessageCreate(TestMessage* message, MessageHeader* header, int value)
+void testMessageCreate(Message* msg, int value)
 {
-    header->type = MESSAGE_TEST;
+    msg->header.type = MESSAGE_TEST;
 
-    message->value = value;
+    TestMessage* test = (TestMessage*)malloc(sizeof(TestMessage));
+    test->value = value;
+
+    msg->payload = test;
 }
 
-void disconnectMessageCreate(MessageHeader* header)
+void disconnectMessageCreate(Message* msg)
 {
-    header->type = MESSAGE_DISCONNECT;
+    msg->header.type = MESSAGE_DISCONNECT;
+    msg->header.length = 0;
+    msg->payload = NULL;
+}
+
+void messageDestroy(Message* msg)
+{
+    if(msg->payload != NULL)
+    {
+        free(msg->payload);
+        msg->payload = NULL;
+    }
 }
 
 #define ERROR_CHECK() if(error != SOCKET_OK) return error
 
-SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
+SocketError messageSend(Socket* socket, Message* msg)
 {
     char payload_buffer[MAX_PAYLOAD_SIZE];
     int payload_size = 0;
-    switch(header->type)
+    switch(msg->header.type)
     {
     case MESSAGE_TEST:
-        payload_size = _testMessageSerialize((TestMessage*)payload, payload_buffer);
-        header->length = payload_size;
+        payload_size = _testMessageSerialize((TestMessage*)(msg->payload), payload_buffer);
+        if (msg->payload == NULL)
+        {
+            return SOCKET_RECV_FAILED;
+        }
+        msg->header.length = payload_size;
         break;
     case MESSAGE_DISCONNECT:
         payload_size = 0;
@@ -84,7 +103,7 @@ SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
     }
 
     char header_buffer[HEADER_SIZE];
-    int header_size = _messageHeaderSerialize(header, header_buffer);
+    int header_size = _messageHeaderSerialize(&msg->header, header_buffer);
 
     int bytes_sent = 0;
     SocketError error = socketSend(socket, header_buffer, header_size, &bytes_sent);
@@ -99,23 +118,32 @@ SocketError messageSend(Socket* socket, MessageHeader* header, void* payload)
     return SOCKET_OK;
 }
 
-SocketError messageReceive(Socket* socket, MessageHeader* header, void* payload)
+SocketError messageReceive(Socket* socket, Message* msg)
 {
+    msg->payload = NULL;
+
     char header_buffer[HEADER_SIZE];
     SocketError error = socketReceiveAll(socket, header_buffer, HEADER_SIZE);
     ERROR_CHECK();
-    _messageHeaderDeserialize(header_buffer, header);
+    _messageHeaderDeserialize(header_buffer, &msg->header);
+
+    if (msg->header.length > MAX_PAYLOAD_SIZE)
+    {
+        return SOCKET_RECV_FAILED;
+    }
 
     char payload_buffer[MAX_PAYLOAD_SIZE];
-    error = socketReceiveAll(socket, payload_buffer, header->length);
+    error = socketReceiveAll(socket, payload_buffer, msg->header.length);
     ERROR_CHECK();
     
-    switch(header->type)
+    switch(msg->header.type)
     {
     case MESSAGE_TEST:
-        _testMessageDeserialize(payload_buffer, (TestMessage*)payload);
+        msg->payload = malloc(sizeof(TestMessage));
+        _testMessageDeserialize(payload_buffer, msg->payload);
         break;
     case MESSAGE_DISCONNECT:
+        msg->payload = NULL;
         break;
     default:
         return SOCKET_RECV_FAILED;

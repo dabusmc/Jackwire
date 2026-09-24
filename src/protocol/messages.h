@@ -26,14 +26,29 @@ struct TestMessage
 
 typedef struct TestMessage TestMessage;
 
-// Creation
-void testMessageCreate(TestMessage* message, MessageHeader* header, int value);
-void disconnectMessageCreate(MessageHeader* header);
+struct Message
+{
+    MessageHeader header;
+    void* payload;
+};
+
+typedef struct Message Message;
+
+#define sendDisconnectMessage(socket) \
+    Message msg; \
+    disconnectMessageCreate(&msg); \
+    messageSend(socket, &msg); \
+    messageDestroy(&msg)
+
+// Life Cycle
+void testMessageCreate(Message* msg, int value);
+void disconnectMessageCreate(Message* msg);
+void messageDestroy(Message* msg);
 
 // Sending
-SocketError messageSend(Socket* socket, MessageHeader* header, void* payload);
+SocketError messageSend(Socket* socket, Message* msg);
 
 // Receiving
-SocketError messageReceive(Socket* socket, MessageHeader* header, void* payload);
+SocketError messageReceive(Socket* socket, Message* msg);
 
 #endif
