@@ -147,26 +147,67 @@ void socketDestroy(Socket* sock)
     free(sock);
 }
 
-SocketError socketSend(Socket *sock, const void *data, int length)
+SocketError socketSend(Socket* sock, const void* data, int target_length, int* bytes_sent)
 {
-    int result = send(sock->impl, data, length, 0);
+    int result = send(sock->impl, data, target_length, 0);
     
     if (result == SOCKET_ERROR)
     {
         return SOCKET_SEND_FAILED;
     }
 
+    *bytes_sent = result;
+
     return SOCKET_OK;
 }
 
-SocketError socketReceive(Socket *sock, void *buffer, int length)
+SocketError socketReceive(Socket* sock, void* buffer, int target_length, int* bytes_received)
 {
-    int result = recv(sock->impl, buffer, length, 0);
+    int result = recv(sock->impl, buffer, target_length, 0);
 
-    if(result == SOCKET_ERROR)
+    if(result == 0)
+    {
+        return SOCKET_CONNECTION_CLOSED;
+    }
+    else if(result == SOCKET_ERROR)
     {
         return SOCKET_RECV_FAILED;
     }
 
+    *bytes_received = result;
+
     return SOCKET_OK;
+}
+
+SocketError socketReceiveAll(Socket* sock, void* buffer, int target_length)
+{
+    int bytes_received = 0;
+
+    while(bytes_received < target_length)
+    {
+        int result = recv(sock->impl, (char*)buffer + bytes_received, target_length - bytes_received, 0);
+
+        if(result == 0)
+        {
+            return SOCKET_CONNECTION_CLOSED;
+        }
+        else if(result == SOCKET_ERROR)
+        {
+            return SOCKET_RECV_FAILED;
+        }
+
+        bytes_received += result;
+    }
+
+    return SOCKET_OK;
+}
+
+uint32_t littleToBigEndian(uint32_t value)
+{
+    return htonl(value);
+}
+
+uint32_t bigToLittleEndian(uint32_t value)
+{
+    return ntohl(value);
 }

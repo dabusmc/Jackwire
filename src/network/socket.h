@@ -1,6 +1,8 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
+#include <stdint.h>
+
 typedef enum
 {
     SOCKET_OK = 0,
@@ -13,7 +15,9 @@ typedef enum
     SOCKET_CONNECT_FAILED,
 
     SOCKET_SEND_FAILED,
-    SOCKET_RECV_FAILED
+    SOCKET_RECV_FAILED,
+
+    SOCKET_CONNECTION_CLOSED
 } SocketError;
 
 typedef struct Socket Socket;
@@ -30,7 +34,12 @@ SocketError socketConnect(Socket* sock, const char* address, const char* port);
 void socketDestroy(Socket* sock);
 
 // Send/Receive
-SocketError socketSend(Socket *sock, const void *data, int length);
-SocketError socketReceive(Socket *sock, void *buffer, int length);
+SocketError socketSend(Socket* sock, const void* data, int target_length, int* bytes_sent);
+SocketError socketReceive(Socket* sock, void* buffer, int target_length, int* bytes_received);
+SocketError socketReceiveAll(Socket* sock, void* buffer, int target_length);
+
+// Utility
+uint32_t littleToBigEndian(uint32_t value);
+uint32_t bigToLittleEndian(uint32_t value);
 
 #endif

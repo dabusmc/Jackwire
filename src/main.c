@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "network/socket.h"
+#include "protocol/messages.h"
 
 #define MAX_PLAYERS 1
 
@@ -58,11 +59,17 @@ int serverMain(int argc, char** argv)
                 {
                     clients[i] = client;
                     printf("Client %d connected.\n", i + 1);
+
+                    MessageHeader header;
+                    TestMessage msg;
+                    testMessageCreate(&msg, &header, 42);
+                    printf("Value Sent: %i\n", msg.value);
                     
-                    char msg_buffer[7];
-                    socketReceive(client, msg_buffer, 7);
-                    printf("Received: %s\n", msg_buffer);
-                    socketSend(client, "World", 6);
+                    error = messageSend(client, &header, &msg);
+                    if (error != SOCKET_OK)
+                    {
+                        printf("Failed to send message.\n");
+                    }
 
                     client_count += 1;
                     
@@ -107,11 +114,11 @@ int clientMain(int argc, char** argv)
     }
 
     printf("Connected to server!\n");
-    socketSend(client, "Hello!", 7);
 
-    char msg_buffer[7];
-    socketReceive(client, msg_buffer, 7);
-    printf("Received: %s\n", msg_buffer);
+    MessageHeader header;
+    TestMessage msg;
+    messageReceive(client, &header, &msg);
+    printf("Value Received: %i\n", msg.value);
 
     socketDestroy(client);
 
