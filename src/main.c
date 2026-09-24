@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 {
     if (argc <= 1)
     {
-        printf("Usage: Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
+        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
         return -1;
     }
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        printf("Usage: dhwahgduiywah");
+        printf("Usage:\n\tjackwire server <port>\n\tjackwire client <port>");
         result = -1;
     }
 
