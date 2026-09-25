@@ -7,6 +7,14 @@
 
 #define MAX_TEXTURES 128
 
+void spriteSetRect(Sprite* sprite, float x, float y, float w, float h)
+{
+    sprite->rect.x = x;
+    sprite->rect.y = y;
+    sprite->rect.w = w;
+    sprite->rect.h = h;
+}
+
 RenderError rendererInit(RenderData** data, uint32_t window_width, uint32_t window_height, const char* window_title)
 {
     RenderData* d = (RenderData*)malloc(sizeof(RenderData));
@@ -74,6 +82,20 @@ RenderError rendererLoadTexture(RenderData* data, int* texture_index, const char
     return RENDER_OK;
 }
 
+RenderError rendererLoadSprite(RenderData* data, Sprite* sprite, const char* name)
+{
+    int texture_index;
+    RenderError error = rendererLoadTexture(data, &texture_index, name);
+    if(error != RENDER_OK)
+    {
+        return error;
+    }
+
+    sprite->texture_index = texture_index;
+
+    return RENDER_OK;
+}
+
 void rendererClear(RenderData* data, float r, float g, float b)
 {
     SDL_SetRenderDrawColorFloat(data->renderer, r, g, b, SDL_ALPHA_OPAQUE_FLOAT);
@@ -85,7 +107,7 @@ void rendererDisplay(RenderData* data)
     SDL_RenderPresent(data->renderer);
 }
 
-void rendererDrawTexture(RenderData* data, int texture_index)
+void rendererDrawTexture(RenderData* data, int texture_index, SDL_FRect rect)
 {
     if(texture_index < 0 || texture_index >= data->loaded_texture_count)
     {
@@ -93,5 +115,10 @@ void rendererDrawTexture(RenderData* data, int texture_index)
     }
 
     SDL_Texture* to_draw = data->loaded_textures[texture_index];
-    SDL_RenderTexture(data->renderer, to_draw, NULL, NULL);
+    SDL_RenderTexture(data->renderer, to_draw, NULL, &rect);
+}
+
+void rendererDrawSprite(RenderData* data, Sprite* sprite)
+{
+    rendererDrawTexture(data, sprite->texture_index, sprite->rect);
 }

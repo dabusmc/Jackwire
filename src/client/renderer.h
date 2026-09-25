@@ -22,13 +22,25 @@ struct RenderData
 };
 typedef struct RenderData RenderData;
 
+struct Sprite
+{
+    int texture_index;
+    SDL_FRect rect;
+};
+typedef struct Sprite Sprite;
+
+void spriteSetRect(Sprite* sprite, float x, float y, float w, float h);
+
 RenderError rendererInit(RenderData** data, uint32_t window_width, uint32_t window_height, const char* window_title);
 void rendererDestroy(RenderData* data);
 
 RenderError rendererLoadTexture(RenderData* data, int* texture_index, const char* name);
+RenderError rendererLoadSprite(RenderData* data, Sprite* sprite, const char* name);
 
 void rendererClear(RenderData* data, float r, float g, float b);
 void rendererDisplay(RenderData* data);
-void rendererDrawTexture(RenderData* data, int texture_index);
+
+void rendererDrawTexture(RenderData* data, int texture_index, SDL_FRect rect);
+void rendererDrawSprite(RenderData* data, Sprite* sprite);
 
 #endif

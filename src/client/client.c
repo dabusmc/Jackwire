@@ -101,8 +101,10 @@ int clientMain(int argc, char** argv)
         return -1;
     }
 
-    int texture_index;
-    render_error = rendererLoadTexture(renderer, &texture_index, "Hearts_King_white.png");
+    Sprite king_of_hearts;
+    spriteSetRect(&king_of_hearts, 347.5f, 100, 105, 150);
+    
+    render_error = rendererLoadSprite(renderer, &king_of_hearts, "Hearts_King_white.png");
     if(render_error != RENDER_OK)
     {
         rendererDestroy(renderer);
@@ -152,7 +154,7 @@ int clientMain(int argc, char** argv)
         if(data.game_started)
         {
             rendererClear(renderer, 0.14f, 0.14f, 0.14f);
-            rendererDrawTexture(renderer, texture_index);
+            rendererDrawSprite(renderer, &king_of_hearts);
             rendererDisplay(renderer);
         }
         else
