@@ -96,6 +96,17 @@ int clientMain(int argc, char** argv)
     RenderError render_error = rendererInit(&renderer, 800, 600, "Jackwire");
     if(render_error != RENDER_OK)
     {
+        sendDisconnectMessage(client);
+        socketDestroy(client);
+        return -1;
+    }
+
+    int texture_index;
+    render_error = rendererLoadTexture(renderer, &texture_index, "Hearts_King_white.png");
+    if(render_error != RENDER_OK)
+    {
+        rendererDestroy(renderer);
+        sendDisconnectMessage(client);
         socketDestroy(client);
         return -1;
     }
@@ -141,6 +152,7 @@ int clientMain(int argc, char** argv)
         if(data.game_started)
         {
             rendererClear(renderer, 0.14f, 0.14f, 0.14f);
+            rendererDrawTexture(renderer, texture_index);
             rendererDisplay(renderer);
         }
         else

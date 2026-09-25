@@ -44,7 +44,7 @@ uint8_t deckDrawNext(Deck* deck)
         drawn = drawn & 0b00111111;
 
         uint8_t val = drawn & 0b00001111;
-        if(val <= 14 && val > 0)
+        if(val <= 14 && val > 1)
         {
             card_is_valid = 1;
         }
