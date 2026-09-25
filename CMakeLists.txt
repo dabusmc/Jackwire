@@ -17,6 +17,7 @@ set(SOURCE "src/main.c"
     "src/protocol/messages.c"
     "src/server/server.c"
     "src/client/client.c"
+    "src/client/renderer.c"
     "src/game/deck.c"
     "src/game/hand.c")
 

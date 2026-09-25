@@ -1,12 +1,12 @@
 #include "client.h"
 
+#include "renderer.h"
+
 #include "network/socket.h"
 #include "protocol/messages.h"
 
 #include "game/deck.h"
 #include "game/hand.h"
-
-#include <SDL3/SDL.h>
 
 #include <stdio.h>
 
@@ -37,24 +37,6 @@ SocketError _initClient(Socket** client, char* ip, char* port)
     return SOCKET_OK;
 }
 
-int _initSDL(SDL_Window** window, SDL_Renderer** renderer)
-{
-    if(!SDL_Init(SDL_INIT_VIDEO))
-    {
-        printf("SDL initialization failed: %s\n", SDL_GetError());
-        return 0;
-    }
-
-    if(!SDL_CreateWindowAndRenderer("Jackwire", 800, 600, 0, window, renderer))
-    {
-        printf("Window/Renderer creation failed: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 0;
-    }
-
-    return 1;
-}
-
 void _dumpCards(Hand* hand)
 {
     printf("Cards in Hand\n");
@@ -65,7 +47,7 @@ void _dumpCards(Hand* hand)
     }
 }
 
-int _messageLoop(Message* message, GameData* data)
+int _handleMessage(Message* message, GameData* data)
 {
     switch(message->header.type)
     {
@@ -110,9 +92,9 @@ int clientMain(int argc, char** argv)
     messageReceive(client, &msg);
     printf("Value Received: %i\n", ((TestMessage*)msg.payload)->value);
 
-    SDL_Renderer* renderer;
-    SDL_Window* window;
-    if(!_initSDL(&window, &renderer))
+    RenderData* renderer;
+    RenderError render_error = rendererInit(&renderer, 800, 600, "Jackwire");
+    if(render_error != RENDER_OK)
     {
         socketDestroy(client);
         return -1;
@@ -150,7 +132,7 @@ int clientMain(int argc, char** argv)
 
             if (error == SOCKET_OK)
             {
-                _messageLoop(&msg, &data);
+                _handleMessage(&msg, &data);
             }
 
             messageDestroy(&msg);
@@ -158,9 +140,8 @@ int clientMain(int argc, char** argv)
 
         if(data.game_started)
         {
-            SDL_SetRenderDrawColorFloat(renderer, 0.14f, 0.14f, 0.14f, SDL_ALPHA_OPAQUE_FLOAT);
-            SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
+            rendererClear(renderer, 0.14f, 0.14f, 0.14f);
+            rendererDisplay(renderer);
         }
         else
         {
@@ -170,16 +151,13 @@ int clientMain(int argc, char** argv)
             const float green = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
             const float blue = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
 
-            SDL_SetRenderDrawColorFloat(renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);
-            SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
+            rendererClear(renderer, red, green, blue);
+            rendererDisplay(renderer);
         }
     }
 
     handDestroy(data.hand);
-
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    rendererDestroy(renderer);
 
     sendDisconnectMessage(client);
 

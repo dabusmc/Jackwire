@@ -130,8 +130,8 @@ int serverMain(int argc, char** argv)
 
     Hand* hand;
     handCreate(&hand);
-    handAddCard(&hand, deckDrawNext(deck));
-    handAddCard(&hand, deckDrawNext(deck));
+    handAddCard(hand, deckDrawNext(deck));
+    handAddCard(hand, deckDrawNext(deck));
 
     Message game_start_message;
     for(int i = 0; i < max_players; i++)
