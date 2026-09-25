@@ -46,10 +46,10 @@ struct GameStartMessage
 typedef struct GameStartMessage GameStartMessage;
 
 #define sendDatalessMessage(socket, func) \
-    Message msg; \
-    func(&msg); \
-    messageSend(socket, &msg); \
-    messageDestroy(&msg)
+    Message __msg__; \
+    func(&__msg__); \
+    messageSend(socket, &__msg__); \
+    messageDestroy(&__msg__)
 
 // Life Cycle
 void messageDestroy(Message* msg);

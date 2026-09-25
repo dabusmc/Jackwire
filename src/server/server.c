@@ -4,6 +4,7 @@
 #include "protocol/messages.h"
 
 #include "game/deck.h"
+#include "game/hand.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -127,6 +128,11 @@ int serverMain(int argc, char** argv)
         return -1;
     }
 
+    Hand* hand;
+    handCreate(&hand);
+    handAddCard(&hand, deckDrawNext(deck));
+    handAddCard(&hand, deckDrawNext(deck));
+
     Message game_start_message;
     for(int i = 0; i < max_players; i++)
     {
@@ -200,6 +206,7 @@ int serverMain(int argc, char** argv)
     }
 
     // Game Cleanup
+    handDestroy(hand);
     deckDestroy(deck);
 
     // Server Cleanup

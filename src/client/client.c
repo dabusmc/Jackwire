@@ -4,10 +4,19 @@
 #include "protocol/messages.h"
 
 #include "game/deck.h"
+#include "game/hand.h"
 
 #include <SDL3/SDL.h>
 
 #include <stdio.h>
+
+struct GameData
+{
+    int game_started;
+
+    Hand* hand;
+};
+typedef struct GameData GameData;
 
 SocketError _initClient(Socket** client, char* ip, char* port)
 {
@@ -26,6 +35,56 @@ SocketError _initClient(Socket** client, char* ip, char* port)
 
     printf("Connected to server!\n");
     return SOCKET_OK;
+}
+
+int _initSDL(SDL_Window** window, SDL_Renderer** renderer)
+{
+    if(!SDL_Init(SDL_INIT_VIDEO))
+    {
+        printf("SDL initialization failed: %s\n", SDL_GetError());
+        return 0;
+    }
+
+    if(!SDL_CreateWindowAndRenderer("Jackwire", 800, 600, 0, window, renderer))
+    {
+        printf("Window/Renderer creation failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 0;
+    }
+
+    return 1;
+}
+
+void _dumpCards(Hand* hand)
+{
+    printf("Cards in Hand\n");
+    for(int i = 0; i < hand->card_count; i++)
+    {
+        uint8_t current = hand->cards[i];
+        printf("\t%s of %s\n", cardGetValueName(current), cardGetSuitName(current));
+    }
+}
+
+int _messageLoop(Message* message, GameData* data)
+{
+    switch(message->header.type)
+    {
+    case MESSAGE_S2C_GAME_START:
+        GameStartMessage* game_start = (GameStartMessage*)message->payload;
+        
+        handAddCard(data->hand, game_start->first_card);
+        handAddCard(data->hand, game_start->second_card);
+
+        _dumpCards(data->hand);
+        
+        data->game_started = 1;
+        break;
+    default:
+        printf("Unimplemented Message: %i\n", message->header.type);
+        break;
+    }
+
+    return 1;
 }
 
 int clientMain(int argc, char** argv)
@@ -51,25 +110,19 @@ int clientMain(int argc, char** argv)
     messageReceive(client, &msg);
     printf("Value Received: %i\n", ((TestMessage*)msg.payload)->value);
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        printf("SDL initialization failed: %s\n", SDL_GetError());
-        socketDestroy(client);
-        return -1;
-    }
-
     SDL_Renderer* renderer;
     SDL_Window* window;
-    if (!SDL_CreateWindowAndRenderer("Jackwire", 800, 600, 0, &window, &renderer))
+    if(!_initSDL(&window, &renderer))
     {
-        printf("Couldn't create window/renderer: %s\n", SDL_GetError());
-        SDL_Quit();
         socketDestroy(client);
         return -1;
     }
 
+    GameData data;
+    data.game_started = 0;
+    handCreate(&data.hand);
+
     int running = 1;
-    int game_started = 0;
     while (running)
     {
         SDL_Event event;
@@ -81,6 +134,13 @@ int clientMain(int argc, char** argv)
                 printf("Disconnected from server!\n");
                 running = 0;
             }
+            else if (event.type == SDL_EVENT_KEY_DOWN)
+            {
+                if (event.key.key == SDLK_SPACE)
+                {
+                    printf("Space pressed!\n");
+                }
+            }
         }
 
         if(socketHasData(client))
@@ -90,25 +150,13 @@ int clientMain(int argc, char** argv)
 
             if (error == SOCKET_OK)
             {
-                switch(msg.header.type)
-                {
-                case MESSAGE_S2C_GAME_START:
-                    GameStartMessage* game_start = (GameStartMessage*)msg.payload;
-                    printf("Starting with %s of %s and %s of %s\n",
-                        cardGetValueName(game_start->first_card), cardGetSuitName(game_start->first_card),
-                        cardGetValueName(game_start->second_card), cardGetSuitName(game_start->second_card));
-                    game_started = 1;
-                    break;
-                default:
-                    printf("Unimplemented Message: %i\n", msg.header.type);
-                    break;
-                }
+                _messageLoop(&msg, &data);
             }
 
             messageDestroy(&msg);
         }
 
-        if(game_started)
+        if(data.game_started)
         {
             SDL_SetRenderDrawColorFloat(renderer, 0.14f, 0.14f, 0.14f, SDL_ALPHA_OPAQUE_FLOAT);
             SDL_RenderClear(renderer);
@@ -127,6 +175,8 @@ int clientMain(int argc, char** argv)
             SDL_RenderPresent(renderer);
         }
     }
+
+    handDestroy(data.hand);
 
     SDL_DestroyWindow(window);
     SDL_Quit();

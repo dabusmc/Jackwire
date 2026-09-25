@@ -60,6 +60,7 @@ uint8_t deckDrawNext(Deck* deck)
     }
 
     deck->drawn_cards[deck->drawn_card_count] = drawn;
+    deck->drawn_card_count += 1;
     return drawn;
 }
 

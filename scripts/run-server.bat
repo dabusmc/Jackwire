@@ -2,6 +2,6 @@
 
 cd ../build
 
-.\jackwire.exe server 23430 1
+.\jackwire.exe server 23430 2
 
 pause

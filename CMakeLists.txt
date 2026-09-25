@@ -17,7 +17,8 @@ set(SOURCE "src/main.c"
     "src/protocol/messages.c"
     "src/server/server.c"
     "src/client/client.c"
-    "src/game/deck.c")
+    "src/game/deck.c"
+    "src/game/hand.c")
 
 add_executable(jackwire ${SOURCE})
 target_include_directories("jackwire" PUBLIC "src")
